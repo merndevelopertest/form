@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EOD Report Form</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    max-width: 600px;
+    margin: 50px auto;
+}
+form input, form button {
+    width: 100%;
+    padding: 8px;
+    margin: 6px 0 16px 0;
+}
+form button {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+form button:hover {
+    background-color: #0056b3;
+}
+</style>
+</head>
+<body>
+
+<h2>EOD Report Form</h2>
+
+<form id="eodForm">
+  <label>Account Manager:</label>
+  <input list="accountManagers" name="Account manager" id="accountManager" required>
+  <datalist id="accountManagers"></datalist>
+
+  <label>Account Name:</label>
+  <input list="accountNames" name="Account Name" id="accountName">
+  <datalist id="accountNames"></datalist>
+
+  <label>Email Id:</label>
+  <input list="emailIds" name="Email Id" id="emailId">
+  <datalist id="emailIds"></datalist>
+
+  <label>Listings:</label>
+  <input type="text" name="Listings">
+
+  <label>Optimizations:</label>
+  <input type="text" name="Optimizations">
+
+  <label>Calls/Pitches:</label>
+  <input type="text" name="Calls/Pitches">
+
+  <label>Ads Suggestion /Run:</label>
+  <input type="text" name="Ads Suggestion /Run">
+
+  <label>Deals & Sales:</label>
+  <input type="text" name="Deals& Sales">
+
+  <label>Tickets:</label>
+  <input type="text" name="Tickets">
+
+  <label>Pending Task:</label>
+  <input type="text" name="Pending Task">
+
+  <label>Remarks/Issue:</label>
+  <input type="text" name="Remarks/Issue">
+
+  <button type="submit">Submit</button>
+</form>
+
+<script>
+const suggestionWebhook = 'https://jacksparrow002.app.n8n.cloud/webhook-test/get-suggestions';
+const submitWebhook = 'https://jacksparrow002.app.n8n.cloud/webhook-test/f9ad5b1a-e443-48dc-b215-6ecdb57e99cc';
+
+// Fetch dynamic suggestions from n8n
+async function fetchSuggestions() {
+    try {
+        const res = await fetch(suggestionWebhook);
+        const data = await res.json();
+
+        document.getElementById('accountManagers').innerHTML = data.accountManagers.map(v => `<option value="${v}">`).join('');
+        document.getElementById('accountNames').innerHTML = data.accountNames.map(v => `<option value="${v}">`).join('');
+        document.getElementById('emailIds').innerHTML = data.emailIds.map(v => `<option value="${v}">`).join('');
+    } catch (err) {
+        console.error('Failed to fetch suggestions:', err);
+    }
+}
+
+fetchSuggestions();
+
+// Handle form submission
+document.getElementById('eodForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = Object.fromEntries(new FormData(this));
+
+    // Add today's date
+    formData['Date'] = new Date().toISOString().split('T')[0];
+
+    try {
+        const res = await fetch(submitWebhook, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+
+        if (res.ok) {
+            alert('EOD Report submitted successfully!');
+            this.reset();
+            fetchSuggestions(); // Refresh suggestions
+        } else {
+            alert('Submission failed!');
+            console.error(await res.text());
+        }
+    } catch (err) {
+        console.error('Error submitting form:', err);
+        alert('Submission error!');
+    }
+});
+</script>
+
+</body>
+</html>
